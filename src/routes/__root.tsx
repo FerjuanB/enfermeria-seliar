@@ -78,21 +78,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Registro de Enfermería — Control de Guardia SELIAR" },
+      { title: "Enfermería SeLIAR — Panel operativo" },
       {
         name: "description",
         content:
-          "Control de ingreso y egreso de guardia de Enfermería SELIAR, paso a paso desde el celular.",
+          "Panel operativo de Enfermería SeLIAR para registrar guardias y gestionar cambios, compensatorios y licencias.",
       },
       { name: "author", content: "SELIAR" },
       {
         property: "og:title",
-        content: "Registro de Enfermería — Control de Guardia SELIAR",
+        content: "Enfermería SeLIAR — Panel operativo",
       },
       {
         property: "og:description",
         content:
-          "Control de ingreso y egreso de guardia de Enfermería SELIAR, paso a paso desde el celular.",
+          "Panel operativo de Enfermería SeLIAR para registrar guardias y gestionar cambios, compensatorios y licencias.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

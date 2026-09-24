@@ -1,5 +1,12 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { ArrowLeftRight, ClipboardClock, ClockPlus, Home, Palmtree } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+
+const NAV_REVEAL_EDGE_PX = 96;
+const NAV_TOP_THRESHOLD_PX = 8;
+const NAV_HIDE_SCROLL_PX = 6;
+const NAV_REVEAL_SCROLL_PX = 4;
+const NAV_HIDE_AFTER_SCROLL_PX = 24;
 
 const navigationItems = [
   { to: "/", label: "Inicio", icon: Home, available: true },
@@ -11,11 +18,78 @@ const navigationItems = [
 
 export function SeliarMobileNav() {
   const { pathname } = useLocation();
+  const navRef = useRef<HTMLElement | null>(null);
+  const visibilityRef = useRef(true);
+  const [isVisible, setIsVisible] = useState(true);
+
+  const setVisibility = useCallback((visible: boolean) => {
+    if (visibilityRef.current === visible) return;
+    visibilityRef.current = visible;
+    setIsVisible(visible);
+  }, []);
+
+  const reveal = useCallback(() => {
+    setVisibility(true);
+  }, [setVisibility]);
+
+  useEffect(() => {
+    const lastScrollY = { current: window.scrollY };
+    const nav = navRef.current;
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const scrollDelta = currentScrollY - lastScrollY.current;
+      lastScrollY.current = currentScrollY;
+
+      if (currentScrollY <= NAV_TOP_THRESHOLD_PX) {
+        reveal();
+        return;
+      }
+
+      if (nav?.contains(document.activeElement)) return;
+
+      if (scrollDelta <= -NAV_REVEAL_SCROLL_PX) {
+        reveal();
+      } else if (scrollDelta >= NAV_HIDE_SCROLL_PX && currentScrollY > NAV_HIDE_AFTER_SCROLL_PX) {
+        setVisibility(false);
+      }
+    };
+
+    const revealNearBottomEdge = (clientY: number) => {
+      if (clientY >= window.innerHeight - NAV_REVEAL_EDGE_PX) reveal();
+    };
+
+    const handlePointerMove = (event: PointerEvent) => revealNearBottomEdge(event.clientY);
+    const handleTouchStart = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (touch) revealNearBottomEdge(touch.clientY);
+    };
+    const handleFocusIn = (event: FocusEvent) => {
+      if (nav?.contains(event.target as Node)) reveal();
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("pointermove", handlePointerMove, { passive: true });
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("focusin", handleFocusIn);
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("focusin", handleFocusIn);
+    };
+  }, [reveal, setVisibility]);
+
+  useEffect(() => {
+    reveal();
+  }, [pathname, reveal]);
 
   return (
     <nav
+      ref={navRef}
       aria-label="Navegación principal"
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 shadow-[0_-8px_24px_oklch(0.27_0.035_202/0.12)] backdrop-blur"
+      className={`fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 shadow-[0_-8px_24px_oklch(0.27_0.035_202/0.12)] backdrop-blur transition-transform duration-200 motion-reduce:transition-none ${isVisible ? "translate-y-0" : "translate-y-full"}`}
     >
       <div className="mx-auto grid max-w-lg grid-cols-5 px-1 pb-[max(env(safe-area-inset-bottom),0.25rem)] pt-1">
         {navigationItems.map(({ to, label, icon: Icon, available }) => {

@@ -18,6 +18,7 @@ dist-ssr
 
 # Wrangler / Cloudflare
 .wrangler/
+.netlify/
 .dev.vars
 .lovable
 .codex
