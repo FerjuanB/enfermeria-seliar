@@ -1,0 +1,86 @@
+# Google Apps Script bridges
+
+Each SeLIAR workflow has an isolated Apps Script deployment and Google Form contract.
+Keep bridge files flat in this directory: use names such as `cambioGuardia.gs`,
+`compensatorio.gs`, and `lao.gs`; do not create one folder per workflow.
+
+## Cambio de guardia
+
+1. Create a standalone Apps Script project and paste `cambioGuardia.gs`.
+2. In **Project Settings → Script properties**, add `CAMBIO_GUARDIA_SECRET` with a
+   strong secret value.
+3. Deploy it as a web app that accepts POST requests from the SeLIAR server.
+4. Configure the application server with:
+   - `GOOGLE_APPS_SCRIPT_CAMBIO_GUARDIA_URL`
+   - `GOOGLE_APPS_SCRIPT_CAMBIO_GUARDIA_SECRET`
+
+The browser sends the request only to the TanStack server function. That function
+adds the secret server-side before calling Apps Script, so neither Apps Script secret
+is exposed to browser code.
+
+Cambio sends a required `requesterEmail` field. The bridge validates it, stores it in
+the explicit required Google Form item `1891793506`, and sends an email copy after the
+Form response is saved. Google Forms automatic email collection may remain enabled.
+Authorize `MailApp` when deploying or running the bridge so the confirmation email can
+be sent. If email delivery fails after submission, the saved Form response still
+succeeds and the browser shows a warning.
+
+## Existing Control de guardia deployment
+
+Control remains independent. Do not rename or reuse its existing
+`GOOGLE_APPS_SCRIPT_URL` and `GOOGLE_APPS_SCRIPT_SECRET` variables for Cambio.
+Its bridge continues to be `Code.gs`.
+
+## Compensatorio
+
+1. Create a separate standalone Apps Script project and paste `compensatorio.gs`.
+2. In **Project Settings → Script properties**, add `COMPENSATORIO_SECRET` with a
+   strong secret value.
+3. Automatic Google Forms email collection must be **OFF** for this bridge. The
+   bridge submits `FormResponse` objects programmatically and cannot populate
+   Google's respondent-email metadata. The Form currently contains the required
+   explicit text item `Correo electrónico` (item ID `1851963092`). Run
+   `setupCompensatorioEmailField()` from the Apps Script editor; the helper disables
+   automatic collection, keeps the explicit item required, and logs its actual ID.
+4. Deploy the project as an independent web app that accepts POST requests from the
+   SeLIAR server. Authorize `MailApp` when prompted, then redeploy the updated script.
+5. Configure the application server with:
+   - `GOOGLE_APPS_SCRIPT_COMPENSATORIO_URL`
+   - `GOOGLE_APPS_SCRIPT_COMPENSATORIO_SECRET`
+
+The bridge resolves `Correo electrónico` by title at submission time and keeps the
+refreshed ID `1851963092` in its known Form contract. If automatic collection is
+still enabled, the bridge stops before submission with an operator-facing error;
+it never mutates the production Form settings per request. Refresh
+`docs/google-apps-script/datosForm.json` if the Form schema changes again. The Form
+response is saved before the MailApp copy is sent; if email delivery fails, the
+saved request still succeeds and the browser shows a warning.
+
+## LAO
+
+1. Create a separate standalone Apps Script project and paste `lao.gs`.
+2. In **Project Settings → Script properties**, add `LAO_SECRET` with a strong secret
+   value.
+3. Automatic Google Forms email collection must be **OFF** for this programmatic
+   bridge. The Form contains the required explicit text item `Correo Electrónico`
+   (item ID `1849920835`). Run `setupLaoEmailField()` from the Apps Script editor;
+   the helper disables automatic collection, keeps the explicit item required, and
+   logs its actual ID.
+4. Deploy the project as an independent web app that accepts POST requests from the
+   SeLIAR server. Authorize `MailApp` when prompted, then redeploy the updated script.
+5. Configure the application server with:
+   - `GOOGLE_APPS_SCRIPT_LAO_URL`
+   - `GOOGLE_APPS_SCRIPT_LAO_SECRET`
+
+The bridge resolves `Correo Electrónico` by title at submission time and submits the
+first day of the selected start month to the existing Google Forms date item. It
+validates the requested dates and email address, but does not attempt to enforce
+seniority or simultaneous-license limits because those values are not collected by
+the Form. The Form response is saved before the MailApp copy is sent; if email
+delivery fails, the saved request still succeeds and the browser shows a warning.
+
+## Future bridges
+
+For each new form, create a separate flat `.gs` bridge, deploy it independently,
+and add a dedicated pair of server-only URL and secret environment variables. Keep
+the Form ID and Script Property key scoped to that bridge.
