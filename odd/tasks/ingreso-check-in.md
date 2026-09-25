@@ -45,7 +45,7 @@ The user needs a separate way to record a person's entry with identity, assigned
 ## Tasks
 - [x] ING-1: Implement the standalone mobile-first `/ingreso` UI, required field validation, location capture states, and review/confirmation flow. Focused ESLint and `npm.cmd run typecheck` passed. Route registration was generated in `src/routeTree.gen.ts`; it does not add a Home or navigation CTA.
 - [x] ING-2: Implement the server-side payload validation/Apps Script bridge contract and dedicated Apps Script persistence/email-copy source with deployment prerequisites documented. The server validates all user/location fields and keeps the URL/secret server-only; `ingreso.gs` creates a dedicated Form with a run-once setup helper, validates the same mobile list and geolocation, stores location data, and treats MailApp failure independently. Setup/deployment requirements are documented without concrete IDs or secrets.
-- [ ] ING-3: Run checks and structural readback; record outcomes and a Conventional Commit identity.
+- [x] ING-3: Ran checks and structural readback; recorded the work-unit commit. Focused ESLint, typecheck, and build passed; full lint remains incomplete after >4 minutes. Commit `c6193c2` (`feat(ingreso): add standalone location check-in`).
 
 ## Progress and Evidence
 - Exploration confirmed the existing Compensatorio mobile list, required email, conditional MailApp copy, and workflow UX patterns.
@@ -59,7 +59,7 @@ The user needs a separate way to record a person's entry with identity, assigned
 - Verification so far: focused ESLint passed both in the writer run and a parent spot check after the location-refresh fix; `npm.cmd run typecheck` passed both in the writer run and parent spot check; `npm.cmd run build` passed; Apps Script syntax check via `Get-Content docs/google-apps-script/ingreso.gs -Raw | node --check -` passed. `npm.cmd run lint` produced no result after >4 minutes and was interrupted, so full lint is incomplete.
 - Runtime harness: N/A — no staging deployment or configured Apps Script endpoint is available/authorized in this task. Manual scenario to run after HTTPS deployment: open `/ingreso` directly, deny location and confirm submission remains blocked with retry guidance, allow location and verify accuracy/capture time, then attempt submission with absent bridge variables and confirm the not-configured message. HTTPS is required for device geolocation (localhost is a secure development origin).
 - Authored additions are about 900 lines excluding generated route-tree lines, above the task's ~400-line forecast. User selected `feature-branch-chain`: `staging` is the tracker branch; local child `feat/ingreso-check-in` targets `staging`; only the tracker should later merge to `main`. No remote push or PR creation was requested/performed.
-- Current branch is `feat/ingreso-check-in`, created from `staging` with the uncommitted feature changes preserved. No commit has been created yet.
+- Current branch is `feat/ingreso-check-in`, created from `staging` with the feature changes preserved. Work-unit commit `c6193c2` contains the six scoped files.
 
 ## Next Step
-Finish structural readback and record the work-unit commit identity here and in the full Engram mirror. Full `npm.cmd run lint` remained incomplete after more than four minutes; report it honestly rather than retrying indefinitely. Do not push or create a PR; the planned first PR target is `staging`.
+The local work is complete. The first PR should target `staging`; only `staging` should later merge into `main`. No push or PR was performed. Full lint remains incomplete and should be resolved before treating the change as fully verified.
