@@ -65,8 +65,8 @@ Make email delivery optional while preserving the existing Google Form record an
 - `npm run lint` did not complete: it stalled without output and was interrupted. The changed TypeScript files passed targeted ESLint instead.
 - Independent read-only verification found no concrete code regressions; it noted this task document needed progress reconciliation, now completed.
 - Risk assessment was unclassifiable because `gentle-ai review assess` refused the untracked ODD task document; per policy this was treated as high, and an independent verifier completed successfully.
-- Commit evidence: pending.
+- Work-unit commit: `3fe4a59` (`feat(forms): make email copies optional`).
 
 ## Next Step
 
-Create the feature work-unit commit, then record its identity here and synchronize this document to Engram.
+Implementation is complete. No deployment or push was performed; Apps Script redeployment and real email delivery remain deployment-time checks.
