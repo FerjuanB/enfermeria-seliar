@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeftRight, ChevronRight, ClockPlus, HeartPulse } from "lucide-react";
+import { ArrowLeftRight, CalendarDays, ChevronRight, ClockPlus, HeartPulse } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -15,6 +15,12 @@ export const Route = createFileRoute("/")({
 });
 
 const managementWorkflows = [
+  {
+    to: "/horarios" as const,
+    title: "Horarios de guardia",
+    description: "Consultá el cronograma vigente.",
+    icon: CalendarDays,
+  },
   {
     to: "/cambio-guardia" as const,
     title: "Cambio de guardia",

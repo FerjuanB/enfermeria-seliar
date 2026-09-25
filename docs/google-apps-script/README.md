@@ -87,6 +87,36 @@ seniority or simultaneous-license limits because those values are not collected 
 the Form. The Form response is saved before the MailApp copy is sent; if email
 delivery fails, the saved request still succeeds and the browser shows a warning.
 
+## Published schedule viewer
+
+This viewer uses its own standalone Apps Script project. Paste `PublishedSchedule.gs` into
+that project; do not add it to `Code.gs` or another form bridge. In **Project Settings →
+Script properties**, configure:
+
+- `PUBLISHED_SCHEDULE_FOLDER_ID`: the ID of the Drive folder that contains the one current PDF.
+- `PUBLISHED_SCHEDULE_SECRET`: a strong shared secret.
+
+Deploy the script as a web app that accepts requests from the app server. Configure the
+server-only variables `GOOGLE_APPS_SCRIPT_SCHEDULE_URL` and
+`GOOGLE_APPS_SCRIPT_SCHEDULE_SECRET` in the hosting environment. The browser calls a
+TanStack server function; it never receives either the Apps Script URL or shared secret.
+
+The endpoint fails closed unless the folder contains exactly one file and that file has
+the `application/pdf` MIME type. After deployment, make the current PDF viewable by the
+intended app audience. In the file's Drive sharing/settings controls, disable reader
+download, print, and copy when those controls are available. The app embeds Drive's
+preview and has no download button or archive list. These settings do not prevent
+screenshots or other technical capture of content that a reader can view.
+
+### Coordinator update procedure
+
+Replace the existing PDF in the configured folder rather than adding another file:
+remove or move the old PDF out of that folder, then add the new PDF. Keep the folder ID
+and file-sharing settings unchanged. The app reads the folder on each request, so the
+same `/horarios` route picks up the replacement without a frontend edit or redeployment.
+Do not keep prior schedules in this folder; the endpoint intentionally reports an error
+if it finds more than one file or a non-PDF file.
+
 ## Future bridges
 
 For each new form, create a separate flat `.gs` bridge, deploy it independently,
