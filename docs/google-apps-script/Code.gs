@@ -50,6 +50,9 @@ function doPost(evento) {
     if (!secreto || payload.secret !== secreto) {
       return respuestaJson({ ok: false, error: "No autorizado" });
     }
+    if (typeof payload.emailRequested !== "boolean") {
+      return respuestaJson({ ok: false, error: "Preferencia de correo inválida" });
+    }
 
     const registro = payload.registro;
     if (!registro || !registro.guardia) {
@@ -119,20 +122,23 @@ function doPost(evento) {
     let emailEnviado = false;
     let errorEmail = "";
 
-    try {
-      enviarCopiaPorCorreo(registro, enviada.getId());
-      emailEnviado = true;
-    } catch (errorEmailEnvio) {
-      errorEmail = errorEmailEnvio instanceof Error
-        ? errorEmailEnvio.message
-        : "No se pudo enviar la copia por correo";
-      console.error(`Registro guardado, pero falló el email: ${errorEmail}`);
+    if (payload.emailRequested) {
+      try {
+        enviarCopiaPorCorreo(registro, enviada.getId());
+        emailEnviado = true;
+      } catch (errorEmailEnvio) {
+        errorEmail = errorEmailEnvio instanceof Error
+          ? errorEmailEnvio.message
+          : "No se pudo enviar la copia por correo";
+        console.error(`Registro guardado, pero falló el email: ${errorEmail}`);
+      }
     }
 
     return respuestaJson({
       ok: true,
       adjuntos: enlaces,
       respuestaId: enviada.getId(),
+      emailRequested: payload.emailRequested,
       emailEnviado,
       errorEmail,
     });

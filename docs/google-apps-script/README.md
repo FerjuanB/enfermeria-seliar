@@ -18,18 +18,23 @@ The browser sends the request only to the TanStack server function. That functio
 adds the secret server-side before calling Apps Script, so neither Apps Script secret
 is exposed to browser code.
 
-Cambio sends a required `requesterEmail` field. The bridge validates it, stores it in
-the explicit required Google Form item `1891793506`, and sends an email copy after the
-Form response is saved. Google Forms automatic email collection may remain enabled.
-Authorize `MailApp` when deploying or running the bridge so the confirmation email can
-be sent. If email delivery fails after submission, the saved Form response still
-succeeds and the browser shows a warning.
+Cambio sends a required `requesterEmail` field and a validated `emailRequested` boolean.
+The bridge stores the address in the explicit required Google Form item `1891793506`.
+It sends an email copy with `MailApp` only when `emailRequested` is `true`, and only
+after the Form response is saved. Google Forms automatic email collection may remain
+enabled. Authorize `MailApp` when deploying or running the bridge. If email was
+requested but delivery fails, the saved Form response still succeeds and the browser
+shows a warning; when email was not requested, no delivery warning is shown.
 
 ## Existing Control de guardia deployment
 
 Control remains independent. Do not rename or reuse its existing
 `GOOGLE_APPS_SCRIPT_URL` and `GOOGLE_APPS_SCRIPT_SECRET` variables for Cambio.
 Its bridge continues to be `Code.gs`.
+The user can opt in to a copy with the final-send checkbox. The server validates the
+choice and passes it separately from the unchanged Form registration payload; `Code.gs`
+calls `MailApp` only when the choice is true and only after the Form response is saved.
+An email failure does not undo the saved response.
 
 ## Compensatorio
 
@@ -49,7 +54,9 @@ Its bridge continues to be `Code.gs`.
    - `GOOGLE_APPS_SCRIPT_COMPENSATORIO_SECRET`
 
 The bridge resolves `Correo electrónico` by title at submission time and keeps the
-refreshed ID `1851963092` in its known Form contract. If automatic collection is
+refreshed ID `1851963092` in its known Form contract. It sends the optional copy only
+when the validated `emailRequested` request value is true, after saving the response.
+If automatic collection is
 still enabled, the bridge stops before submission with an operator-facing error;
 it never mutates the production Form settings per request. Refresh
 `docs/google-apps-script/datosForm.json` if the Form schema changes again. The Form
@@ -73,8 +80,9 @@ saved request still succeeds and the browser shows a warning.
    - `GOOGLE_APPS_SCRIPT_LAO_SECRET`
 
 The bridge resolves `Correo Electrónico` by title at submission time and submits the
-first day of the selected start month to the existing Google Forms date item. It
-validates the requested dates and email address, but does not attempt to enforce
+first day of the selected start month to the existing Google Forms date item. It sends
+the optional copy only when the validated `emailRequested` request value is true,
+after saving the response. It validates the requested dates and email address, but does not attempt to enforce
 seniority or simultaneous-license limits because those values are not collected by
 the Form. The Form response is saved before the MailApp copy is sent; if email
 delivery fails, the saved request still succeeds and the browser shows a warning.

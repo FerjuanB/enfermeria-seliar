@@ -66,18 +66,26 @@ function doPost(event) {
     let emailSent = false;
     let emailError = "";
 
-    try {
-      sendConfirmationEmail(request, submitted.getId());
-      emailSent = true;
-    } catch (sendEmailError) {
-      emailError =
-        sendEmailError instanceof Error
-          ? sendEmailError.message
-          : "Unable to send the confirmation email.";
-      console.error(`Compensatory request saved, but email delivery failed: ${emailError}`);
+    if (request.emailRequested) {
+      try {
+        sendConfirmationEmail(request, submitted.getId());
+        emailSent = true;
+      } catch (sendEmailError) {
+        emailError =
+          sendEmailError instanceof Error
+            ? sendEmailError.message
+            : "Unable to send the confirmation email.";
+        console.error(`Compensatory request saved, but email delivery failed: ${emailError}`);
+      }
     }
 
-    return jsonResponse({ ok: true, responseId: submitted.getId(), emailSent, emailError });
+    return jsonResponse({
+      ok: true,
+      responseId: submitted.getId(),
+      emailRequested: request.emailRequested,
+      emailSent,
+      emailError,
+    });
   } catch (error) {
     console.error(error);
     return jsonResponse({
@@ -113,6 +121,9 @@ function setupCompensatorioEmailField() {
 
 function validateRequest(request) {
   if (!request || typeof request !== "object") throw new Error("Missing request.");
+  if (typeof request.emailRequested !== "boolean") {
+    throw new Error("Invalid email preference.");
+  }
 
   const requesterName = String(request.requesterName || "").trim();
   if (!requesterName) throw new Error("Missing requesterName.");
@@ -127,7 +138,14 @@ function validateRequest(request) {
   dateFromIso(compensatoryDate);
   const hours = validateHours(request.hours);
 
-  return { requesterName, requesterEmail, requesterMobile, compensatoryDate, hours };
+  return {
+    emailRequested: request.emailRequested,
+    requesterName,
+    requesterEmail,
+    requesterMobile,
+    compensatoryDate,
+    hours,
+  };
 }
 
 function validateRequesterEmail(value) {

@@ -22,6 +22,7 @@ const dateSchema = z.string().refine(isValidIsoDate, "Invalid calendar date");
 const timeSchema = z.union([z.literal(""), z.string().regex(/^\d{2}:\d{2}$/, "Invalid time")]);
 
 export const changeRequestSchema = z.object({
+  emailRequested: z.boolean(),
   coverage: z.enum(["complete", "partial"]),
   requesterName: z.string().trim().min(1).max(120),
   requesterMobile: z.string().trim().min(1).max(40),
@@ -38,7 +39,7 @@ export const changeRequestSchema = z.object({
 export type ChangeRequestPayload = z.infer<typeof changeRequestSchema>;
 
 export type ChangeSubmissionResult =
-  | { state: "submitted"; emailSent: boolean; emailError?: string }
+  | { state: "submitted"; emailRequested: boolean; emailSent: boolean; emailError?: string }
   | { state: "not_configured" }
   | { state: "error"; message: string };
 
@@ -109,8 +110,9 @@ export const enviarSolicitudCambio = createServerFn({ method: "POST" })
 
       return {
         state: "submitted",
-        emailSent: body.emailSent === true,
-        ...(typeof body.emailError === "string" && body.emailError
+        emailRequested: data.emailRequested,
+        emailSent: data.emailRequested && body.emailSent === true,
+        ...(data.emailRequested && typeof body.emailError === "string" && body.emailError
           ? { emailError: body.emailError }
           : {}),
       };

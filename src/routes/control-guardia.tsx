@@ -148,6 +148,7 @@ function ControlGuardia() {
   const [intentoEnvio, setIntentoEnvio] = useState(false);
   const [enviado, setEnviado] = useState<"enviado" | "no_configurado" | null>(null);
   const [emailNoEnviado, setEmailNoEnviado] = useState(false);
+  const [emailRequested, setEmailRequested] = useState(false);
   const [hidratado, setHidratado] = useState(false);
   const [correosRecientes, setCorreosRecientes] = useState<string[]>([]);
   const [adjuntos, setAdjuntos] = useState<File[]>([]);
@@ -157,13 +158,19 @@ function ControlGuardia() {
     try {
       const crudo = localStorage.getItem(STORAGE_KEY);
       if (crudo) {
-        const guardado = JSON.parse(crudo) as { datos?: Partial<RegistroBorrador> };
+        const guardado = JSON.parse(crudo) as {
+          datos?: Partial<RegistroBorrador>;
+          emailRequested?: unknown;
+        };
         if (guardado.datos) {
           setDatos({
             ...estadoInicial,
             ...guardado.datos,
             guardia: { ...estadoInicial.guardia, ...guardado.datos.guardia },
           });
+        }
+        if (typeof guardado.emailRequested === "boolean") {
+          setEmailRequested(guardado.emailRequested);
         }
       }
       const historial = localStorage.getItem(EMAIL_HISTORY_KEY);
@@ -183,8 +190,8 @@ function ControlGuardia() {
 
   useEffect(() => {
     if (!hidratado || enviado) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ datos }));
-  }, [datos, hidratado, enviado]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ datos, emailRequested }));
+  }, [datos, emailRequested, hidratado, enviado]);
 
   useEffect(() => {
     const correo = datos.guardia.email.trim().toLowerCase();
@@ -356,10 +363,12 @@ function ControlGuardia() {
     }
     setEnviando(true);
     try {
-      const resultado = await enviar({ data: crearDatosEnvio(registroEnvio, adjuntos) });
+      const resultado = await enviar({
+        data: crearDatosEnvio(registroEnvio, adjuntos, emailRequested),
+      });
       if (resultado.estado === "enviado") {
         setEnviado("enviado");
-        setEmailNoEnviado(!resultado.emailEnviado);
+        setEmailNoEnviado(resultado.emailSolicitado && !resultado.emailEnviado);
         setAdjuntos([]);
         localStorage.removeItem(STORAGE_KEY);
       } else if (resultado.estado === "no_configurado") {
@@ -384,6 +393,7 @@ function ControlGuardia() {
     setIntentoEnvio(false);
     setEnviado(null);
     setEmailNoEnviado(false);
+    setEmailRequested(false);
     localStorage.removeItem(STORAGE_KEY);
     window.scrollTo({ top: 0 });
   };
@@ -707,11 +717,21 @@ function ControlGuardia() {
           </div>
         )}
 
+        <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-md border border-input bg-card px-4 py-3 text-sm text-foreground focus-within:ring-2 focus-within:ring-ring">
+          <input
+            type="checkbox"
+            checked={emailRequested}
+            onChange={(event) => setEmailRequested(event.target.checked)}
+            disabled={enviando}
+            className="mt-0.5 size-4 shrink-0 accent-primary"
+          />
+          <span>Quiero recibir una copia del registro por correo electrónico</span>
+        </label>
         <button
           type="button"
           onClick={confirmarEnvio}
           disabled={enviando}
-          className="mt-6 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-md bg-[var(--brand-orange)] px-4 text-base font-bold text-warning-foreground shadow-[0_4px_0_oklch(0.53_0.15_48)] transition-transform hover:-translate-y-0.5 disabled:opacity-60"
+          className="mt-3 inline-flex min-h-14 w-full items-center justify-center gap-2 rounded-md bg-[var(--brand-orange)] px-4 text-base font-bold text-warning-foreground shadow-[0_4px_0_oklch(0.53_0.15_48)] transition-transform hover:-translate-y-0.5 disabled:opacity-60"
         >
           {enviando ? <Loader2 className="size-5 animate-spin" /> : <Send className="size-5" />}
           {enviando ? "Enviando…" : "Enviar registro"}
@@ -804,9 +824,10 @@ function crearResumenAnotacionesEquipamiento(datos: RegistroBorrador) {
   ];
 }
 
-function crearDatosEnvio(datos: RegistroPayload, adjuntos: File[]) {
+function crearDatosEnvio(datos: RegistroPayload, adjuntos: File[], emailRequested: boolean) {
   const formData = new FormData();
   formData.set("registro", JSON.stringify(datos));
+  formData.set("emailRequested", String(emailRequested));
   adjuntos.forEach((adjunto) => formData.append("adjuntos", adjunto, adjunto.name));
   return formData;
 }

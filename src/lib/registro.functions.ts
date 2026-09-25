@@ -29,7 +29,7 @@ const payloadSchema = z.object({
 });
 
 export type ResultadoEnvio =
-  | { estado: "enviado"; emailEnviado: boolean; errorEmail?: string }
+  | { estado: "enviado"; emailSolicitado: boolean; emailEnviado: boolean; errorEmail?: string }
   | { estado: "no_configurado" }
   | { estado: "error"; detalle: string };
 
@@ -73,6 +73,11 @@ function resumirErrorExterno(contenido: string): string {
 async function leerEntrada(formData: FormData) {
   const registroCrudo = formData.get("registro");
   if (typeof registroCrudo !== "string") throw new Error("Registro ausente");
+  const emailSolicitadoCrudo = formData.get("emailRequested");
+  if (emailSolicitadoCrudo !== "true" && emailSolicitadoCrudo !== "false") {
+    throw new Error("Preferencia de correo inválida");
+  }
+  const emailSolicitado = emailSolicitadoCrudo === "true";
 
   const registro = payloadSchema.parse(JSON.parse(registroCrudo));
   const adjuntos = formData.getAll("adjuntos").filter(esArchivo);
@@ -92,7 +97,7 @@ async function leerEntrada(formData: FormData) {
     }),
   );
 
-  return { registro, archivos };
+  return { registro, archivos, emailSolicitado };
 }
 
 export const enviarRegistro = createServerFn({ method: "POST" })
@@ -107,11 +112,16 @@ export const enviarRegistro = createServerFn({ method: "POST" })
     if (!url || !secreto) return { estado: "no_configurado" };
 
     try {
-      const { registro, archivos } = await leerEntrada(data);
+      const { registro, archivos, emailSolicitado } = await leerEntrada(data);
       const respuesta = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ secret: secreto, registro, archivos }),
+        body: JSON.stringify({
+          secret: secreto,
+          registro,
+          archivos,
+          emailRequested: emailSolicitado,
+        }),
         redirect: "follow",
       });
 
@@ -124,9 +134,19 @@ export const enviarRegistro = createServerFn({ method: "POST" })
         };
       }
 
-      let contenido: { ok?: unknown; error?: unknown; emailEnviado?: unknown };
+      let contenido: {
+        ok?: unknown;
+        error?: unknown;
+        emailRequested?: unknown;
+        emailEnviado?: unknown;
+      };
       try {
-        contenido = JSON.parse(textoRespuesta) as { ok?: unknown; error?: unknown };
+        contenido = JSON.parse(textoRespuesta) as {
+          ok?: unknown;
+          error?: unknown;
+          emailRequested?: unknown;
+          emailEnviado?: unknown;
+        };
       } catch {
         const detalleExterno = resumirErrorExterno(textoRespuesta);
         return {
@@ -146,7 +166,11 @@ export const enviarRegistro = createServerFn({ method: "POST" })
         };
       }
 
-      return { estado: "enviado", emailEnviado: contenido.emailEnviado === true };
+      return {
+        estado: "enviado",
+        emailSolicitado,
+        emailEnviado: emailSolicitado && contenido.emailEnviado === true,
+      };
     } catch (error) {
       return {
         estado: "error",
