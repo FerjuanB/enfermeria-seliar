@@ -46,6 +46,7 @@ const hoursSchema = z
   }, "Hours must be positive");
 
 export const compensatoryRequestSchema = z.object({
+  emailRequested: z.boolean(),
   requesterName: z.string().trim().min(1).max(120),
   requesterEmail: z.string().trim().email("Invalid requester email").max(255),
   requesterMobile: z.enum(MOBILE_CHOICES),
@@ -56,7 +57,7 @@ export const compensatoryRequestSchema = z.object({
 export type CompensatoryRequestPayload = z.infer<typeof compensatoryRequestSchema>;
 
 export type CompensatorySubmissionResult =
-  | { state: "submitted"; emailSent: boolean; emailError?: string }
+  | { state: "submitted"; emailRequested: boolean; emailSent: boolean; emailError?: string }
   | { state: "not_configured" }
   | { state: "error"; message: string };
 
@@ -127,8 +128,9 @@ export const enviarSolicitudCompensatorio = createServerFn({ method: "POST" })
 
       return {
         state: "submitted",
-        emailSent: body.emailSent === true,
-        ...(typeof body.emailError === "string" && body.emailError
+        emailRequested: data.emailRequested,
+        emailSent: data.emailRequested && body.emailSent === true,
+        ...(data.emailRequested && typeof body.emailError === "string" && body.emailError
           ? { emailError: body.emailError }
           : {}),
       };

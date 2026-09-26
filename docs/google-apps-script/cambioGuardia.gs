@@ -70,17 +70,25 @@ function doPost(event) {
     let emailSent = false;
     let emailError = "";
 
-    try {
-      sendConfirmationEmail(request, submitted.getId());
-      emailSent = true;
-    } catch (sendEmailError) {
-      emailError = sendEmailError instanceof Error
-        ? sendEmailError.message
-        : "Unable to send the confirmation email.";
-      console.error(`Change request saved, but email delivery failed: ${emailError}`);
+    if (request.emailRequested) {
+      try {
+        sendConfirmationEmail(request, submitted.getId());
+        emailSent = true;
+      } catch (sendEmailError) {
+        emailError = sendEmailError instanceof Error
+          ? sendEmailError.message
+          : "Unable to send the confirmation email.";
+        console.error(`Change request saved, but email delivery failed: ${emailError}`);
+      }
     }
 
-    return jsonResponse({ ok: true, responseId: submitted.getId(), emailSent, emailError });
+    return jsonResponse({
+      ok: true,
+      responseId: submitted.getId(),
+      emailRequested: request.emailRequested,
+      emailSent,
+      emailError,
+    });
   } catch (error) {
     console.error(error);
     return jsonResponse({
@@ -92,6 +100,9 @@ function doPost(event) {
 
 function validateRequest(request) {
   if (!request || typeof request !== "object") throw new Error("Missing request.");
+  if (typeof request.emailRequested !== "boolean") {
+    throw new Error("Invalid email preference.");
+  }
 
   const requiredTextFields = [
     "requesterName",

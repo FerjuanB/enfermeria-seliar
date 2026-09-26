@@ -58,6 +58,7 @@ type Stage = "details" | "review" | "confirmed";
 type MobileChoice = (typeof MOBILE_CHOICES)[number];
 
 interface CompensatoryDraft {
+  emailRequested: boolean;
   requesterName: string;
   requesterEmail: string;
   requesterMobile: MobileChoice | "";
@@ -66,6 +67,7 @@ interface CompensatoryDraft {
 }
 
 const initialRequest: CompensatoryDraft = {
+  emailRequested: false,
   requesterName: "",
   requesterEmail: "",
   requesterMobile: "",
@@ -141,7 +143,7 @@ function Compensatorio() {
     try {
       const result = await submitRequest({ data: request });
       if (result.state === "submitted") {
-        setEmailNotSent(!result.emailSent);
+        setEmailNotSent(result.emailRequested && !result.emailSent);
         setStage("confirmed");
       } else if (result.state === "not_configured") {
         setSubmissionError(
@@ -339,6 +341,7 @@ function Compensatorio() {
         <Review
           request={request}
           onBack={() => setStage("details")}
+          onEmailRequestedChange={(emailRequested) => updateField("emailRequested", emailRequested)}
           onConfirm={confirmSubmission}
           isSubmitting={isSubmitting}
           submissionError={submissionError}
@@ -530,12 +533,14 @@ function Field({
 function Review({
   request,
   onBack,
+  onEmailRequestedChange,
   onConfirm,
   isSubmitting,
   submissionError,
 }: {
   request: CompensatoryDraft;
   onBack: () => void;
+  onEmailRequestedChange: (requested: boolean) => void;
   onConfirm: () => Promise<void>;
   isSubmitting: boolean;
   submissionError: string | null;
@@ -560,10 +565,6 @@ function Review({
         <SummaryRow label="Fecha del compensatorio" value={request.compensatoryDate} />
         <SummaryRow label="Cantidad de horas" value={request.hours} />
       </dl>
-      <div className="mt-5 flex items-start gap-2 rounded-xl border border-secondary bg-secondary/50 px-4 py-3 text-sm text-secondary-foreground">
-        <Mail className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-        Recibirás una copia de la solicitud en el correo indicado después de guardarla.
-      </div>
       {submissionError && (
         <div
           className="mt-3 rounded-xl border border-destructive/45 bg-destructive/10 px-4 py-3 text-sm text-foreground"
@@ -572,7 +573,18 @@ function Review({
           {submissionError}
         </div>
       )}
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground focus-within:ring-2 focus-within:ring-ring">
+        <input
+          type="checkbox"
+          checked={request.emailRequested}
+          onChange={(event) => onEmailRequestedChange(event.target.checked)}
+          disabled={isSubmitting}
+          className="mt-0.5 size-4 shrink-0 accent-primary"
+        />
+        <Mail className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+        <span>Quiero recibir una copia de la solicitud por correo electrónico</span>
+      </label>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <button
           type="button"
           onClick={onBack}

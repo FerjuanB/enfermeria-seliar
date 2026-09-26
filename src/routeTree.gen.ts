@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as CambioGuardiaRouteImport } from './routes/cambio-guardia'
 import { Route as CompensatorioRouteImport } from './routes/compensatorio'
 import { Route as ControlGuardiaRouteImport } from './routes/control-guardia'
+import { Route as HorariosRouteImport } from './routes/horarios'
 import { Route as LaoRouteImport } from './routes/lao'
 
 const IndexRoute = IndexRouteImport.update({
@@ -35,6 +36,11 @@ const ControlGuardiaRoute = ControlGuardiaRouteImport.update({
   path: '/control-guardia',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HorariosRoute = HorariosRouteImport.update({
+  id: '/horarios',
+  path: '/horarios',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LaoRoute = LaoRouteImport.update({
   id: '/lao',
   path: '/lao',
@@ -46,6 +52,7 @@ export interface FileRoutesByFullPath {
   '/cambio-guardia': typeof CambioGuardiaRoute
   '/compensatorio': typeof CompensatorioRoute
   '/control-guardia': typeof ControlGuardiaRoute
+  '/horarios': typeof HorariosRoute
   '/lao': typeof LaoRoute
 }
 export interface FileRoutesByTo {
@@ -53,6 +60,7 @@ export interface FileRoutesByTo {
   '/cambio-guardia': typeof CambioGuardiaRoute
   '/compensatorio': typeof CompensatorioRoute
   '/control-guardia': typeof ControlGuardiaRoute
+  '/horarios': typeof HorariosRoute
   '/lao': typeof LaoRoute
 }
 export interface FileRoutesById {
@@ -61,20 +69,33 @@ export interface FileRoutesById {
   '/cambio-guardia': typeof CambioGuardiaRoute
   '/compensatorio': typeof CompensatorioRoute
   '/control-guardia': typeof ControlGuardiaRoute
+  '/horarios': typeof HorariosRoute
   '/lao': typeof LaoRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/cambio-guardia' | '/compensatorio' | '/control-guardia' | '/lao'
+    | '/'
+    | '/cambio-guardia'
+    | '/compensatorio'
+    | '/control-guardia'
+    | '/horarios'
+    | '/lao'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cambio-guardia' | '/compensatorio' | '/control-guardia' | '/lao'
+  to:
+    | '/'
+    | '/cambio-guardia'
+    | '/compensatorio'
+    | '/control-guardia'
+    | '/horarios'
+    | '/lao'
   id:
     | '__root__'
     | '/'
     | '/cambio-guardia'
     | '/compensatorio'
     | '/control-guardia'
+    | '/horarios'
     | '/lao'
   fileRoutesById: FileRoutesById
 }
@@ -83,6 +104,7 @@ export interface RootRouteChildren {
   CambioGuardiaRoute: typeof CambioGuardiaRoute
   CompensatorioRoute: typeof CompensatorioRoute
   ControlGuardiaRoute: typeof ControlGuardiaRoute
+  HorariosRoute: typeof HorariosRoute
   LaoRoute: typeof LaoRoute
 }
 
@@ -116,6 +138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ControlGuardiaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/horarios': {
+      id: '/horarios'
+      path: '/horarios'
+      fullPath: '/horarios'
+      preLoaderRoute: typeof HorariosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lao': {
       id: '/lao'
       path: '/lao'
@@ -131,6 +160,7 @@ const rootRouteChildren: RootRouteChildren = {
   CambioGuardiaRoute: CambioGuardiaRoute,
   CompensatorioRoute: CompensatorioRoute,
   ControlGuardiaRoute: ControlGuardiaRoute,
+  HorariosRoute: HorariosRoute,
   LaoRoute: LaoRoute,
 }
 export const routeTree = rootRouteImport

@@ -33,6 +33,7 @@ type Coverage = "complete" | "partial";
 type Stage = "details" | "review" | "confirmed";
 
 interface ChangeRequest {
+  emailRequested: boolean;
   coverage: Coverage;
   requesterName: string;
   requesterMobile: string;
@@ -65,6 +66,7 @@ interface PersonField {
 }
 
 const initialRequest: ChangeRequest = {
+  emailRequested: false,
   coverage: "complete",
   requesterName: "",
   requesterMobile: "",
@@ -163,7 +165,7 @@ function CambioGuardia() {
     try {
       const result = await submitChangeRequest({ data: request });
       if (result.state === "submitted") {
-        setEmailNotSent(!result.emailSent);
+        setEmailNotSent(result.emailRequested && !result.emailSent);
         setStage("confirmed");
       } else if (result.state === "not_configured") {
         setSubmissionError(
@@ -365,6 +367,7 @@ function CambioGuardia() {
         <Review
           request={request}
           onBack={() => setStage("details")}
+          onEmailRequestedChange={(emailRequested) => updateField("emailRequested", emailRequested)}
           onConfirm={confirmSubmission}
           isSubmitting={isSubmitting}
           submissionError={submissionError}
@@ -575,12 +578,14 @@ function Field({
 function Review({
   request,
   onBack,
+  onEmailRequestedChange,
   onConfirm,
   isSubmitting,
   submissionError,
 }: {
   request: ChangeRequest;
   onBack: () => void;
+  onEmailRequestedChange: (requested: boolean) => void;
   onConfirm: () => Promise<void>;
   isSubmitting: boolean;
   submissionError: string | null;
@@ -637,7 +642,17 @@ function Review({
           {submissionError}
         </div>
       )}
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      <label className="mt-5 flex cursor-pointer items-start gap-3 rounded-xl border border-input bg-background px-4 py-3 text-sm text-foreground focus-within:ring-2 focus-within:ring-ring">
+        <input
+          type="checkbox"
+          checked={request.emailRequested}
+          onChange={(event) => onEmailRequestedChange(event.target.checked)}
+          disabled={isSubmitting}
+          className="mt-0.5 size-4 shrink-0 accent-primary"
+        />
+        <span>Quiero recibir una copia de la solicitud por correo electrónico</span>
+      </label>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <button
           type="button"
           onClick={onBack}

@@ -1,5 +1,12 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { ArrowLeftRight, ClipboardClock, ClockPlus, Home, Palmtree } from "lucide-react";
+import {
+  ArrowLeftRight,
+  CalendarDays,
+  ClipboardClock,
+  ClockPlus,
+  Home,
+  Palmtree,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const NAV_REVEAL_EDGE_PX = 96;
@@ -10,6 +17,7 @@ const NAV_HIDE_AFTER_SCROLL_PX = 24;
 
 const navigationItems = [
   { to: "/", label: "Inicio", icon: Home, available: true },
+  { to: "/horarios", label: "Horarios", icon: CalendarDays, available: true },
   { to: "/control-guardia", label: "Control", icon: ClipboardClock, available: true },
   { to: "/cambio-guardia", label: "Cambio", icon: ArrowLeftRight, available: true },
   { to: "/compensatorio", label: "Compens.", icon: ClockPlus, available: true },
@@ -91,7 +99,7 @@ export function SeliarMobileNav() {
       aria-label="Navegación principal"
       className={`fixed inset-x-0 bottom-0 z-50 border-t border-border bg-card/95 shadow-[0_-8px_24px_oklch(0.27_0.035_202/0.12)] backdrop-blur transition-transform duration-200 motion-reduce:transition-none ${isVisible ? "translate-y-0" : "translate-y-full"}`}
     >
-      <div className="mx-auto grid max-w-lg grid-cols-5 px-1 pb-[max(env(safe-area-inset-bottom),0.25rem)] pt-1">
+      <div className="mx-auto grid max-w-lg grid-cols-6 px-1 pb-[max(env(safe-area-inset-bottom),0.25rem)] pt-1">
         {navigationItems.map(({ to, label, icon: Icon, available }) => {
           const active = pathname === to;
           const itemClassName =

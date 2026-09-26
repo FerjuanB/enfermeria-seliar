@@ -27,6 +27,7 @@ const monthSchema = z.string().refine(isValidMonth, "Invalid start month");
 
 export const laoRequestSchema = z
   .object({
+    emailRequested: z.boolean(),
     requesterName: z.string().trim().min(1).max(120),
     requesterEmail: z.string().trim().email("Invalid requester email").max(255),
     startMonth: monthSchema,
@@ -38,7 +39,7 @@ export const laoRequestSchema = z
 export type LaoRequestPayload = z.infer<typeof laoRequestSchema>;
 
 export type LaoSubmissionResult =
-  | { state: "submitted"; emailSent: boolean; emailError?: string }
+  | { state: "submitted"; emailRequested: boolean; emailSent: boolean; emailError?: string }
   | { state: "not_configured" }
   | { state: "error"; message: string };
 
@@ -109,8 +110,9 @@ export const enviarSolicitudLao = createServerFn({ method: "POST" })
 
       return {
         state: "submitted",
-        emailSent: body.emailSent === true,
-        ...(typeof body.emailError === "string" && body.emailError
+        emailRequested: data.emailRequested,
+        emailSent: data.emailRequested && body.emailSent === true,
+        ...(data.emailRequested && typeof body.emailError === "string" && body.emailError
           ? { emailError: body.emailError }
           : {}),
       };
