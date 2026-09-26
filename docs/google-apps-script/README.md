@@ -63,6 +63,38 @@ it never mutates the production Form settings per request. Refresh
 response is saved before the MailApp copy is sent; if email delivery fails, the
 saved request still succeeds and the browser shows a warning.
 
+## Ingreso
+
+This flow uses a separate Apps Script project and Form. No deployment URL, Form ID, or
+secret is checked into the repository.
+
+1. Create a standalone Apps Script project and paste `ingreso.gs`.
+2. Run `setupIngresoForm()` once from the Apps Script editor. It creates a dedicated
+   Form, stores its generated ID in the `INGRESO_FORM_ID` script property, and logs the
+   edit URL so the operator can review the Form. The helper refuses to create another
+   Form while that property is already set.
+3. In **Project Settings → Script properties**, set `INGRESO_SECRET` to a strong secret.
+   Keep both script properties private.
+4. Review the generated Form fields and mobile choices. The Form's automatic email
+   collection is disabled; it includes an explicit required email field.
+5. Deploy the project as a web app that accepts POST requests from the SeLIAR server.
+   Authorize `MailApp` when prompted, then configure the hosting environment with:
+   - `GOOGLE_APPS_SCRIPT_INGRESO_URL`
+   - `GOOGLE_APPS_SCRIPT_INGRESO_SECRET` (the same value as `INGRESO_SECRET`)
+
+The browser sends submissions only to the TanStack server function, which validates
+the payload and adds the secret server-side. The bridge validates the name, email,
+mobile, coordinates, location accuracy, and location-capture timestamp before saving
+the Form response. Google Forms supplies the authoritative response timestamp; the
+captured location timestamp is stored separately. Latitude and longitude are saved as
+text fields with the reported accuracy. A one-time location capture is required before
+the browser enables submission; the app does not track location continuously or treat
+GPS as identity verification. The current route remains intentionally unlinked from
+Home and the mobile navigation while it is being previewed.
+
+The optional MailApp copy is sent only after the Form response is saved. If delivery
+fails, the saved check-in remains successful and the browser shows a separate warning.
+
 ## LAO
 
 1. Create a separate standalone Apps Script project and paste `lao.gs`.
