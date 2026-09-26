@@ -26,6 +26,8 @@ const ITEM_TITLES = {
   longitude: "Longitud",
   accuracyMeters: "Precisión estimada (m)",
   capturedAt: "Fecha y hora de captura de ubicación",
+  capturedAtArgentina: "Fecha y hora de captura (Argentina)",
+  mapsUrl: "Ubicación en Google Maps",
 };
 
 function doGet() {
@@ -54,6 +56,8 @@ function doPost(event) {
     response.withItemResponse(fields.longitude.createResponse(String(request.longitude)));
     response.withItemResponse(fields.accuracyMeters.createResponse(String(request.accuracyMeters)));
     response.withItemResponse(fields.capturedAt.createResponse(request.capturedAt));
+    response.withItemResponse(fields.capturedAtArgentina.createResponse(request.capturedAtArgentina));
+    response.withItemResponse(fields.mapsUrl.createResponse(request.mapsUrl));
 
     const submitted = response.submit();
     let emailSent = false;
@@ -106,10 +110,44 @@ function setupIngresoForm() {
   form.addTextItem().setTitle(ITEM_TITLES.longitude).setRequired(true);
   form.addTextItem().setTitle(ITEM_TITLES.accuracyMeters).setRequired(true);
   form.addTextItem().setTitle(ITEM_TITLES.capturedAt).setRequired(true);
+  form.addTextItem().setTitle(ITEM_TITLES.capturedAtArgentina).setRequired(true);
+  form.addTextItem().setTitle(ITEM_TITLES.mapsUrl).setRequired(true);
   properties.setProperty(FORM_ID_PROPERTY_KEY, form.getId());
 
   console.log(`Ingreso Form created. Review it at: ${form.getEditUrl()}`);
   Logger.log(`Ingreso Form created. Review it at: ${form.getEditUrl()}`);
+}
+
+/** Add only the new location fields to the existing Form; safe to run more than once. */
+function migrateIngresoFormLocationFields() {
+  const formId = PropertiesService.getScriptProperties().getProperty(FORM_ID_PROPERTY_KEY);
+  if (!formId) {
+    throw new Error("Missing INGRESO_FORM_ID script property. No Form was changed.");
+  }
+
+  const form = FormApp.openById(formId);
+  const additions = [ITEM_TITLES.capturedAtArgentina, ITEM_TITLES.mapsUrl];
+  const missing = [];
+  additions.forEach((title) => {
+    const matches = form.getItems().filter((item) => item.getTitle() === title);
+    if (matches.length > 1) {
+      throw new Error(`Multiple Form items use the exact title '${title}'. Resolve duplicates manually.`);
+    }
+    if (matches.length === 1) {
+      if (matches[0].getType() !== FormApp.ItemType.TEXT) {
+        throw new Error(`Form item '${title}' exists but is not short text. No item was changed.`);
+      }
+      return;
+    }
+    missing.push(title);
+  });
+
+  missing.forEach((title) => {
+    form.addTextItem().setTitle(title).setRequired(true);
+    console.log(`Added required short-text Form item: ${title}`);
+  });
+  console.log("Ingreso Form location-field migration complete.");
+  Logger.log("Ingreso Form location-field migration complete.");
 }
 
 function validateRequest(request) {
@@ -141,7 +179,25 @@ function validateRequest(request) {
     throw new Error("Invalid location capture timestamp.");
   }
 
-  return { emailRequested: request.emailRequested, fullName, email, mobile, latitude, longitude, accuracyMeters, capturedAt };
+  const capturedAtArgentina = Utilities.formatDate(
+    capturedAtDate,
+    "America/Argentina/Buenos_Aires",
+    "dd/MM/yyyy HH:mm:ss",
+  );
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${latitude}%2C${longitude}`;
+
+  return {
+    emailRequested: request.emailRequested,
+    fullName,
+    email,
+    mobile,
+    latitude,
+    longitude,
+    accuracyMeters,
+    capturedAt,
+    capturedAtArgentina,
+    mapsUrl,
+  };
 }
 
 function resolveFormItems(form) {
@@ -162,6 +218,8 @@ function resolveFormItems(form) {
     longitude: find(ITEM_TITLES.longitude, FormApp.ItemType.TEXT).asTextItem(),
     accuracyMeters: find(ITEM_TITLES.accuracyMeters, FormApp.ItemType.TEXT).asTextItem(),
     capturedAt: find(ITEM_TITLES.capturedAt, FormApp.ItemType.TEXT).asTextItem(),
+    capturedAtArgentina: find(ITEM_TITLES.capturedAtArgentina, FormApp.ItemType.TEXT).asTextItem(),
+    mapsUrl: find(ITEM_TITLES.mapsUrl, FormApp.ItemType.TEXT).asTextItem(),
   };
   const configuredChoices = fields.mobile.getChoices().map((choice) => choice.getValue());
   if (

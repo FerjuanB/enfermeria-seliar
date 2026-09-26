@@ -69,10 +69,11 @@ This flow uses a separate Apps Script project and Form. No deployment URL, Form 
 secret is checked into the repository.
 
 1. Create a standalone Apps Script project and paste `ingreso.gs`.
-2. Run `setupIngresoForm()` once from the Apps Script editor. It creates a dedicated
-   Form, stores its generated ID in the `INGRESO_FORM_ID` script property, and logs the
-   edit URL so the operator can review the Form. The helper refuses to create another
-   Form while that property is already set.
+2. For a new installation only, run `setupIngresoForm()` once from the Apps Script
+   editor. It creates a dedicated Form, stores its generated ID in the
+   `INGRESO_FORM_ID` script property, and logs the edit URL. It refuses to create a
+   second Form while that property is set. If the Form already exists, do not run setup
+   again; use the migration steps below.
 3. In **Project Settings → Script properties**, set `INGRESO_SECRET` to a strong secret.
    Keep both script properties private.
 4. Review the generated Form fields and mobile choices. The Form's automatic email
@@ -85,12 +86,31 @@ secret is checked into the repository.
 The browser sends submissions only to the TanStack server function, which validates
 the payload and adds the secret server-side. The bridge validates the name, email,
 mobile, coordinates, location accuracy, and location-capture timestamp before saving
-the Form response. Google Forms supplies the authoritative response timestamp; the
-captured location timestamp is stored separately. Latitude and longitude are saved as
-text fields with the reported accuracy. A one-time location capture is required before
-the browser enables submission; the app does not track location continuously or treat
-GPS as identity verification. The current route remains intentionally unlinked from
-Home and the mobile navigation while it is being previewed.
+the Form response. It keeps the raw UTC capture timestamp and adds a deterministic
+`dd/MM/yyyy HH:mm:ss` value in `America/Argentina/Buenos_Aires`. Google Forms supplies
+a separate response-submission timestamp. Latitude, longitude, and reported accuracy
+remain separate text fields. The bridge also stores a `Ubicación en Google Maps` text
+answer containing a Maps URL built from the validated coordinates; no API key is
+required. A one-time location capture is required before the browser enables
+submission; the app does not track location continuously or treat GPS as identity
+verification. The current route remains intentionally unlinked from Home and the
+mobile navigation while it is being previewed.
+
+### Existing Form migration
+
+For the already-created Ingreso Form, update the standalone Apps Script project with the
+current `ingreso.gs` and deploy a new web app version. Then run
+`migrateIngresoFormLocationFields()` once from the Apps Script editor under the account
+that owns the Form. It uses the existing `INGRESO_FORM_ID` and only adds the missing
+required short-text items `Fecha y hora de captura (Argentina)` and
+`Ubicación en Google Maps`. The helper is idempotent: existing exact-title text items
+are left alone. Duplicate exact titles or items with another type cause a clear error
+instead of changing existing fields. It never creates another Form. After migration,
+confirm both questions appear and submit a test check-in. The Maps answer is a URL the
+manager can copy/open; the Argentina time represents GPS capture, not the later Form
+submission. A map pin reflects device-reported coordinates and does not prove identity
+or exact presence. This repository change does not deploy the script or run the
+migration; the operator must perform those steps in Apps Script.
 
 The optional MailApp copy is sent only after the Form response is saved. If delivery
 fails, the saved check-in remains successful and the browser shows a separate warning.
