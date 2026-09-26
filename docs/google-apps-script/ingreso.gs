@@ -110,8 +110,8 @@ function setupIngresoForm() {
   form.addTextItem().setTitle(ITEM_TITLES.longitude).setRequired(true);
   form.addTextItem().setTitle(ITEM_TITLES.accuracyMeters).setRequired(true);
   form.addTextItem().setTitle(ITEM_TITLES.capturedAt).setRequired(true);
-  form.addTextItem().setTitle(ITEM_TITLES.capturedAtArgentina).setRequired(true);
-  form.addTextItem().setTitle(ITEM_TITLES.mapsUrl).setRequired(true);
+  form.addTextItem().setTitle(ITEM_TITLES.capturedAtArgentina).setRequired(false);
+  form.addTextItem().setTitle(ITEM_TITLES.mapsUrl).setRequired(false);
   properties.setProperty(FORM_ID_PROPERTY_KEY, form.getId());
 
   console.log(`Ingreso Form created. Review it at: ${form.getEditUrl()}`);
@@ -128,6 +128,7 @@ function migrateIngresoFormLocationFields() {
   const form = FormApp.openById(formId);
   const additions = [ITEM_TITLES.capturedAtArgentina, ITEM_TITLES.mapsUrl];
   const missing = [];
+  const existing = [];
   additions.forEach((title) => {
     const matches = form.getItems().filter((item) => item.getTitle() === title);
     if (matches.length > 1) {
@@ -137,14 +138,16 @@ function migrateIngresoFormLocationFields() {
       if (matches[0].getType() !== FormApp.ItemType.TEXT) {
         throw new Error(`Form item '${title}' exists but is not short text. No item was changed.`);
       }
+      existing.push(matches[0].asTextItem());
       return;
     }
     missing.push(title);
   });
 
+  existing.forEach((item) => item.setRequired(false));
   missing.forEach((title) => {
-    form.addTextItem().setTitle(title).setRequired(true);
-    console.log(`Added required short-text Form item: ${title}`);
+    form.addTextItem().setTitle(title).setRequired(false);
+    console.log(`Added optional short-text Form item: ${title}`);
   });
   console.log("Ingreso Form location-field migration complete.");
   Logger.log("Ingreso Form location-field migration complete.");

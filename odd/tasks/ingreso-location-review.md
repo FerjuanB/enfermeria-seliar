@@ -44,11 +44,18 @@ The current `/ingreso` flow captures a UTC ISO timestamp and the Apps Script For
 
 ## Progress and Evidence
 - Initial state: user authorized the feature; existing task `odd/tasks/ingreso-check-in.md` confirms TDD disabled and no test runner configured.
-- Migration/deployment sequence: deploy the updated standalone Apps Script version, run `migrateIngresoFormLocationFields()` once from the Apps Script editor under the owning account, verify the two new short-text items in the existing Form, then submit a test check-in and inspect its response. Do not rerun `setupIngresoForm()` on the existing deployment/Form.
+- Migration/deployment sequence: save the updated standalone Apps Script source, run `migrateIngresoFormLocationFields()` in the editor against the existing Form, deploy a new web-app version immediately after, then verify the new items and submit a test check-in. Do not rerun `setupIngresoForm()` on the existing Form.
 - Engram mirror: `odd/ingreso-location-review/tasks`; initial file and full observation were read back before source edits.
 - Verification results: `npm.cmd run typecheck` passed; `npx.cmd eslint src/routes/ingreso.tsx` passed; `npm.cmd run lint` passed with six existing React Refresh warnings and zero errors; `npm.cmd run build` passed with existing deprecation/plugin warnings; `Get-Content docs/google-apps-script/ingreso.gs -Raw | node --check -` passed; `git diff --check` passed.
 - Runtime Google/Form verification: N/A — no remote authorization was given. Operator verification is described above.
 - Commit: this task's work-unit commit, `feat(ingreso): add Argentina capture time and Maps answer` (identity is available in Git history).
 
+## Rollout Hazard Correction
+- Finding: deploying the new handler before adding its two required-by-handler Form items would cause submissions to fail during the gap because `resolveFormItems()` requires both exact-title items.
+- Correction: the Argentina-time and Maps text items are optional in `setupIngresoForm()` and in `migrateIngresoFormLocationFields()`; the updated handler still supplies both values on every submission. The migration validates both fields before making changes, ensures existing target items are optional, and keeps unrelated Form fields untouched.
+- Safe rollout: save source in Apps Script, run `migrateIngresoFormLocationFields()`, immediately deploy the new web-app version, and smoke-test. During the gap, the old deployment can still accept check-ins because the new questions are optional; those interim responses have blank values for both new fields. Schedule at low volume or pause intake if complete reporting is required.
+- Verification: Apps Script syntax check via `Get-Content docs/google-apps-script/ingreso.gs -Raw | node --check -` passed; read back the README migration section and confirmed the migration-first/deploy-second sequence and gap behavior.
+- Correction commit: `fix(ingreso): sequence Form migration safely` (identity is available in Git history).
+
 ## Next Step
-The local implementation is complete. Next, the operator must deploy the updated Apps Script, run the migration against the existing Form, and perform the Form smoke test. No remote operation was performed.
+The local implementation is complete. Next, the operator must save the updated Apps Script, run the migration against the existing Form, deploy the new web-app version, and perform the Form smoke test. No remote operation was performed.

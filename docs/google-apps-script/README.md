@@ -91,22 +91,33 @@ the Form response. It keeps the raw UTC capture timestamp and adds a determinist
 a separate response-submission timestamp. Latitude, longitude, and reported accuracy
 remain separate text fields. The bridge also stores a `Ubicación en Google Maps` text
 answer containing a Maps URL built from the validated coordinates; no API key is
-required. A one-time location capture is required before the browser enables
-submission; the app does not track location continuously or treat GPS as identity
-verification. The current route remains intentionally unlinked from Home and the
-mobile navigation while it is being previewed.
+required. These two machine-populated fields are optional in Google Forms so the
+previous deployed handler can keep accepting submissions while the Form is migrated;
+the current handler always supplies them. A one-time location capture is required
+before the browser enables submission; the app does not track location continuously or
+treat GPS as identity verification. The current route remains intentionally unlinked
+from Home and the mobile navigation while it is being previewed.
 
 ### Existing Form migration
 
-For the already-created Ingreso Form, update the standalone Apps Script project with the
-current `ingreso.gs` and deploy a new web app version. Then run
-`migrateIngresoFormLocationFields()` once from the Apps Script editor under the account
-that owns the Form. It uses the existing `INGRESO_FORM_ID` and only adds the missing
-required short-text items `Fecha y hora de captura (Argentina)` and
-`Ubicación en Google Maps`. The helper is idempotent: existing exact-title text items
-are left alone. Duplicate exact titles or items with another type cause a clear error
-instead of changing existing fields. It never creates another Form. After migration,
-confirm both questions appear and submit a test check-in. The Maps answer is a URL the
+For the already-created Ingreso Form, follow this order to avoid rejecting submissions
+during rollout:
+
+1. Save the current `ingreso.gs` source in the standalone Apps Script project.
+2. Before deploying it, run `migrateIngresoFormLocationFields()` from the Apps Script
+   editor under the account that owns the Form. The helper uses the existing
+   `INGRESO_FORM_ID`, adds only missing optional short-text items `Fecha y hora de
+   captura (Argentina)` and `Ubicación en Google Maps`, and ensures those two target
+   items are optional. It does not create a Form or change unrelated fields. It is
+   idempotent; duplicate exact titles or wrong item types fail before migration edits.
+3. Immediately deploy a new web-app version with the updated handler.
+4. Confirm both questions appear and submit a test check-in.
+
+Between steps 2 and 3, the old deployed handler continues accepting check-ins because
+the new questions are optional. Responses submitted in that interval will have blank
+values for the two new fields. Schedule the migration at low volume; pause intake if
+complete timestamp/Maps reporting is required for every response. After the new version
+is deployed, the current handler always fills both fields. The Maps answer is a URL the
 manager can copy/open; the Argentina time represents GPS capture, not the later Form
 submission. A map pin reflects device-reported coordinates and does not prove identity
 or exact presence. This repository change does not deploy the script or run the
