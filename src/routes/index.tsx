@@ -1,5 +1,13 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowLeftRight, CalendarDays, ChevronRight, ClockPlus, HeartPulse } from "lucide-react";
+import {
+  ArrowLeftRight,
+  CalendarDays,
+  ChevronRight,
+  ClipboardClock,
+  ClockPlus,
+  HeartPulse,
+  LogIn,
+} from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -38,6 +46,23 @@ const managementWorkflows = [
     title: "Solicitud de LAO",
     description: "Prepará tu solicitud de licencia anual ordinaria.",
     icon: HeartPulse,
+  },
+];
+
+const guardiaWorkflows = [
+  {
+    to: "/control-guardia" as const,
+    title: "Control de guardia",
+    description: "Registrá el ingreso, egreso e inventario de cada guardia.",
+    cta: "Ir a control de guardia →",
+    icon: ClipboardClock,
+  },
+  {
+    to: "/ingreso" as const,
+    title: "Registrar ingreso",
+    description: "Completá el registro de ingreso a tu guardia.",
+    cta: "Registrar ingreso →",
+    icon: LogIn,
   },
 ];
 
@@ -85,24 +110,38 @@ function Home() {
           </p>
         </header>
 
-        <section className="mt-5" aria-labelledby="control-guardia-heading">
-          <article className="rounded-2xl bg-primary p-4 text-primary-foreground shadow-[0_18px_40px_oklch(0.2_0.04_202/0.28)] sm:p-5">
-            <h2
-              id="control-guardia-heading"
-              className="font-display text-2xl font-bold leading-tight sm:text-3xl"
-            >
-              Control de guardia
-            </h2>
-            <p className="mt-2 text-sm leading-6 text-primary-foreground/85">
-              Registrá el ingreso, egreso e inventario de cada guardia.
-            </p>
-            <Link
-              to="/control-guardia"
-              className="mt-5 flex min-h-12 w-full items-center justify-center rounded-xl bg-[var(--brand-orange)] px-4 py-3 text-center text-sm font-bold text-primary transition-colors hover:bg-[var(--brand-orange)]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary active:brightness-95 motion-safe:duration-150 motion-reduce:transition-none"
-            >
-              Ir a control de guardia →
-            </Link>
-          </article>
+        <section
+          className="mt-5 rounded-2xl bg-primary p-4 text-primary-foreground shadow-[0_18px_40px_oklch(0.2_0.04_202/0.28)] sm:p-5"
+          aria-labelledby="tu-guardia-heading"
+        >
+          <h2
+            id="tu-guardia-heading"
+            className="font-display text-2xl font-bold leading-tight sm:text-3xl"
+          >
+            Tu guardia
+          </h2>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {guardiaWorkflows.map(({ to, title, description, cta, icon: Icon }) => (
+              <article
+                key={to}
+                className="rounded-xl border border-primary-foreground/20 bg-primary-foreground/5 p-3 sm:p-4"
+              >
+                <div className="flex items-center gap-2">
+                  <Icon className="size-5 shrink-0" aria-hidden="true" />
+                  <h3 className="font-display text-lg font-bold leading-tight">{title}</h3>
+                </div>
+                <p className="mt-2 min-h-12 text-sm leading-6 text-primary-foreground/85">
+                  {description}
+                </p>
+                <Link
+                  to={to}
+                  className="mt-3 flex min-h-12 w-full items-center justify-center rounded-xl bg-[var(--brand-orange)] px-4 py-3 text-center text-sm font-bold text-primary transition-colors hover:bg-[var(--brand-orange)]/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary active:brightness-95 motion-safe:duration-150 motion-reduce:transition-none"
+                >
+                  {cta}
+                </Link>
+              </article>
+            ))}
+          </div>
         </section>
 
         <section
