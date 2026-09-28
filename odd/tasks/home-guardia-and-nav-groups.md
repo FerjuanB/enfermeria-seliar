@@ -28,7 +28,7 @@ The user explicitly authorized these local UX changes after approving the propos
 ## Tasks
 - [x] HNG-1: Group the Home's operational actions under `Tu guardia`, add the `/ingreso` CTA with the existing Home CTA styling, and retain `Gestiones` below.
 - [x] HNG-2: Group mobile navbar destinations into `Tu guardia` and `Gestiones` controls with accessible, keyboard-operable subnavigation while preserving existing destinations and adaptive visibility behavior.
-- [ ] HNG-3: Verify route coverage, active states, keyboard/touch access, responsive layout, lint, typecheck, and production build; record results and commit identity.
+- [x] HNG-3: Verify route coverage, active states, keyboard/touch access, responsive layout, lint, typecheck, and production build; record results and commit identity.
 
 ## Acceptance Criteria
 - Home presents `/ingreso` and `/control-guardia` at equal visual hierarchy within `Tu guardia`.
@@ -51,6 +51,10 @@ The user explicitly authorized these local UX changes after approving the propos
 - HNG-1 commit: `ba1d7546fad3ca2596f92322b8d751eb7ea61a3d` (`feat(home): group guardia actions and add ingreso CTA`).
 - HNG-1 focused verification: `npx.cmd eslint src/routes/index.tsx src/components/SeliarMobileNav.tsx` passed; route readback confirms `/control-guardia`, `/ingreso`, and the four management links are retained.
 - HNG-2 implemented in `src/components/SeliarMobileNav.tsx`: replaced six route cells with Inicio plus two group controls; menus preserve all six workflow destinations, expose `aria-current`, support native keyboard activation, Escape-to-close/focus return, outside-click close, and maintain adaptive reveal/hide with reduced-motion classes.
-- HNG-2 verification so far: focused ESLint and `npm.cmd run typecheck` passed; `git diff --check` passed. HNG-2 commit identity will be added after commit.
+- HNG-2 commit: `1cb7ad8ed82551c42589f179f9d87c489919d08f` (`feat(nav): group mobile workflow destinations`).
+- HNG-2 structural readback: the nav has three bottom-bar controls (Inicio and the two requested groups), with all six workflow destinations in grouped submenus. `aria-current` identifies the active route; the current group is announced on its trigger. Menu links retain 48px minimum height. Keyboard activation opens/focuses the first link; Escape closes and restores focus; pointer outside closes. Existing scroll-driven reveal/hide listeners remain, and reduced-motion transition suppression is preserved. Popup switches to a two-column layout at `sm`.
+- HNG-3 commands: `npx.cmd eslint src/routes/index.tsx src/components/SeliarMobileNav.tsx` passed; `npm.cmd run typecheck` passed; `npm.cmd run lint` passed with 0 errors and 6 existing `react-refresh/only-export-components` warnings in `src/components/ui/{badge,button,form,navigation-menu,sidebar,toggle}.tsx`; `npm.cmd run build` passed with existing TanStack `inputValidator()` deprecation and Vite plugin notices.
+- HNG-3 route and accessibility readback: Home contains `/control-guardia`, `/ingreso`, and all four management routes; navbar groups cover `/control-guardia`, `/ingreso`, `/horarios`, `/cambio-guardia`, `/compensatorio`, and `/lao`. Keyboard, outside-pointer, Escape, active route, touch-target sizing, responsive utility classes, adaptive visibility, and reduced-motion behavior were verified structurally. No live browser screenshot/visual interaction run was performed.
+- HNG-3 final integrity: `git diff --check` passed and the worktree was clean before this task-document update. No generated build outputs were tracked.
 - Current task route: delegated direct implementation, required by the two-file non-trivial writer trigger.
-- Next step: run HNG-3's full lint/build checks and record their outcomes and the HNG-2 commit identity cumulatively; Engram mirror remains pending.
+- Next step: none for implementation. The Engram mirror remains pending because the available session identity was rejected; no memory write was retried.
