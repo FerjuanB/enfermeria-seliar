@@ -558,7 +558,9 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
 }
 
 function formatDateTime(value: string): string {
-  return new Intl.DateTimeFormat("es-AR", { dateStyle: "medium", timeStyle: "short" }).format(
-    new Date(value),
-  );
+  return new Intl.DateTimeFormat("es-AR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "America/Argentina/Buenos_Aires",
+  }).format(new Date(value));
 }
