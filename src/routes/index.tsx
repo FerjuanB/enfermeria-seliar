@@ -51,18 +51,18 @@ const managementWorkflows = [
 
 const guardiaWorkflows = [
   {
-    to: "/control-guardia" as const,
-    title: "Control de guardia",
-    description: "Registrá el ingreso, egreso e inventario de cada guardia.",
-    cta: "Ir a control de guardia →",
-    icon: ClipboardClock,
-  },
-  {
     to: "/ingreso" as const,
     title: "Registrar ingreso",
     description: "Completá el registro de ingreso a tu guardia.",
     cta: "Registrar ingreso →",
     icon: LogIn,
+  },
+  {
+    to: "/control-guardia" as const,
+    title: "Control de guardia",
+    description: "Registrá el ingreso, egreso e inventario de cada guardia.",
+    cta: "Ir a control de guardia →",
+    icon: ClipboardClock,
   },
 ];
 

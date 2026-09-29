@@ -23,8 +23,8 @@ const navigationGroups = [
     label: "Tu guardia",
     icon: ClipboardClock,
     items: [
-      { to: "/control-guardia" as const, label: "Control de guardia", icon: ClipboardClock },
       { to: "/ingreso" as const, label: "Registrar ingreso", icon: LogIn },
+      { to: "/control-guardia" as const, label: "Control de guardia", icon: ClipboardClock },
     ],
   },
   {
